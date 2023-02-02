@@ -67,7 +67,7 @@ namespace ntpe
     // g_kRvaError (-1) in case of error.
     // 
     //**********************************************************************************
-    int64_t rva2offset(IMAGE_NTPE_DATA& ntpe, DWORD rva)
+    int64_t rva2offset(IMAGE_NTPE_DATA& ntpe, uint64_t rva)
     {
         /* retrieve first section */
         try
@@ -203,7 +203,7 @@ namespace ntpe
             IMPORT_LIST result;
 
             /* import table offset */
-            DWORD impOffset = rva2offset(ntpe, ntpe.dataDirectories[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
+            uint64_t impOffset = rva2offset(ntpe, ntpe.dataDirectories[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
 
             /* imoprt table descriptor from import table offset + file base adress */
             PIMAGE_IMPORT_DESCRIPTOR impTable = (PIMAGE_IMPORT_DESCRIPTOR)(impOffset + ntpe.fileBase);
