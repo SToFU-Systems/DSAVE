@@ -111,7 +111,7 @@ std::wstring toUtf16(std::string_view utf8)
 }
 
 //**********************************************************************************
-// FUNCTION: filesearch::generateImportBase(std::wstring_view path, _Out_ IMPORT_STAT ImpStat)
+// FUNCTION: entropy(const char* buff, uint64_t buffSize)
 // 
 // ARGS:
 // const void* pBuff - poinet to a buffer.
