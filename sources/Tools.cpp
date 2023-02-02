@@ -28,71 +28,71 @@ namespace fs = std::filesystem;
 
 bool readFile(std::wstring_view filePath, _Out_ std::vector<char>& fileData)
 {
-	bool result = false;
-	static const uint64_t kBlockSize = 0x100000;
-	HANDLE file = 0, map = 0;
-	PVOID  data = 0;
+    bool result = false;
+    static const uint64_t kBlockSize = 0x100000;
+    HANDLE file = 0, map = 0;
+    PVOID  data = 0;
 
-	try
-	{
-		file = CreateFileW(filePath.data(), GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
-		if (file != INVALID_HANDLE_VALUE)
-		{
-			LARGE_INTEGER fileSize = {};
-			if (fileSize.LowPart = GetFileSize(file, (PDWORD)&fileSize.HighPart))
-			{
-				if (map = CreateFileMappingW(file, 0, PAGE_READONLY, 0, 0, 0))
-				{
-					if (data = MapViewOfFile(map, FILE_MAP_READ, 0, 0, 0))
-					{
-						fileData.resize(fileSize.QuadPart);
-						memcpy(fileData.data(), data, fileSize.QuadPart);
-						result = true;
-						UnmapViewOfFile(data);
-						data = 0;
-					}
-					CloseHandle(map);
-					map = 0;
-				}
-			}
-			CloseHandle(file);
-			file = INVALID_HANDLE_VALUE;
-		}
-		return result;
-	}
-	catch (std::exception&)
-	{
-		if (data != 0)
-			UnmapViewOfFile(data);
-		if (map != 0)
-			CloseHandle(map);
-		if (file != 0 && file != INVALID_HANDLE_VALUE)
-			CloseHandle(file);
-		return false;
-	}
+    try
+    {
+        file = CreateFileW(filePath.data(), GENERIC_READ, FILE_SHARE_READ, 0, OPEN_EXISTING, 0, 0);
+        if (file != INVALID_HANDLE_VALUE)
+        {
+            LARGE_INTEGER fileSize = {};
+            if (fileSize.LowPart = GetFileSize(file, (PDWORD)&fileSize.HighPart))
+            {
+                if (map = CreateFileMappingW(file, 0, PAGE_READONLY, 0, 0, 0))
+                {
+                    if (data = MapViewOfFile(map, FILE_MAP_READ, 0, 0, 0))
+                    {
+                        fileData.resize(fileSize.QuadPart);
+                        memcpy(fileData.data(), data, fileSize.QuadPart);
+                        result = true;
+                        UnmapViewOfFile(data);
+                        data = 0;
+                    }
+                    CloseHandle(map);
+                    map = 0;
+                }
+            }
+            CloseHandle(file);
+            file = INVALID_HANDLE_VALUE;
+        }
+        return result;
+    }
+    catch (std::exception&)
+    {
+        if (data != 0)
+            UnmapViewOfFile(data);
+        if (map != 0)
+            CloseHandle(map);
+        if (file != 0 && file != INVALID_HANDLE_VALUE)
+            CloseHandle(file);
+        return false;
+    }
 }
 
 FILES_LIST getFilesList(std::wstring_view directory, std::wstring_view matchSpec)
 {
-	FILES_LIST filesList;
-	std::error_code ec{};
+    FILES_LIST filesList;
+    std::error_code ec{};
 
-	/* if path is directiry */
-	if (fs::is_directory(directory, ec))
-	{
-		/* iterator for revursive directory traversal */
-		for (auto const& file : fs::recursive_directory_iterator{ directory, fs::directory_options::skip_permission_denied, ec })
-		{
-			for (const auto& it : matchSpec)
-			{
-				if (S_OK == PathMatchSpecExW(file.path().wstring().c_str(), matchSpec.data(), PMSF_MULTIPLE))
-				{
-					filesList.emplace(file.path());
-				}
-			}
-		}
-	}
-	return filesList;
+    /* if path is directiry */
+    if (fs::is_directory(directory, ec))
+    {
+        /* iterator for revursive directory traversal */
+        for (auto const& file : fs::recursive_directory_iterator{ directory, fs::directory_options::skip_permission_denied, ec })
+        {
+            for (const auto& it : matchSpec)
+            {
+                if (S_OK == PathMatchSpecExW(file.path().wstring().c_str(), matchSpec.data(), PMSF_MULTIPLE))
+                {
+                    filesList.emplace(file.path());
+                }
+            }
+        }
+    }
+    return filesList;
 }
 
 std::wstring toUtf16(std::string_view utf8)
@@ -103,8 +103,8 @@ std::wstring toUtf16(std::string_view utf8)
     std::wstring utf16;
     utf16.resize(utf8.size() * 2);
     int count = MultiByteToWideChar(CP_UTF8, 0, utf8.data(), static_cast<int>(utf8.size()), utf16.data(), static_cast<int>(utf16.size()));
-	if (count == 0)
-		return std::wstring();
+    if (count == 0)
+        return std::wstring();
 
     utf16.resize(count);
     return utf16;
@@ -141,8 +141,8 @@ double entropy(const char* buff, uint64_t buffSize)
     /* entropy calculation by formula */
     for (uint32_t i = 0; i < 256; i++)
     {
-		if (double b = (double)statistic[i] / buffSize)
-			entropy += b * (log(b) / log(2));
+        if (double b = (double)statistic[i] / buffSize)
+            entropy += b * (log(b) / log(2));
     };
     /* cast entropy to uint64_t */
     return (entropy * -1);

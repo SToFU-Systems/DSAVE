@@ -40,10 +40,10 @@ namespace ntpe
     typedef std::vector<IMAGE_SECTION_HEADER> SECTIONS_LIST;
 
     DWORD                          alignUp              (DWORD value, DWORD align);
-	std::optional<IMAGE_NTPE_DATA> getNTPEData          (char* fileMapBase, uint64_t fileSize);
-	std::optional<SECTIONS_LIST>   getSectionsList      (IMAGE_NTPE_DATA& ntpe);
+    std::optional<IMAGE_NTPE_DATA> getNTPEData          (char* fileMapBase, uint64_t fileSize);
+    std::optional<SECTIONS_LIST>   getSectionsList      (IMAGE_NTPE_DATA& ntpe);
     std::optional<IMPORT_LIST>     getImportList        (IMAGE_NTPE_DATA& ntpe);
-	std::optional<IMPORT_LIST>	   getImportList        (std::wstring_view filePath);
+    std::optional<IMPORT_LIST>	   getImportList        (std::wstring_view filePath);
 }
 
 
