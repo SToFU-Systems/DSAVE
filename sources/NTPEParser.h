@@ -28,7 +28,7 @@ namespace ntpe
 {
     struct IMAGE_NTPE_DATA
     {
-        PCHAR						fileBase;
+        PCHAR                       fileBase;
         PIMAGE_FILE_HEADER          fileHeader;
         PIMAGE_DATA_DIRECTORY       dataDirectories;
         PIMAGE_SECTION_HEADER       sectionDirectories;
