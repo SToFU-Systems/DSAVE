@@ -24,7 +24,6 @@
 int main()
 {
     wchar_t modpath[MAX_PATH] = {};
-    __debugbreak();
     if (GetModuleFileNameW(0, modpath, _countof(modpath)))
     {
         auto imp = ntpe::getImportList(modpath);
