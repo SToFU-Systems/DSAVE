@@ -29,28 +29,7 @@ namespace ntpe
     // typedef std::map<std::string, std::set<std::string>> IMPORT_LIST;
     // typedef std::vector<IMAGE_SECTION_HEADER> SECTIONS_LIST;
 
-    //**********************************************************************************
-    // FUNCTION: alignUp(DWORD value, DWORD align)
-    // 
-    // ARGS:
-    // DWORD value - value to align.
-    // DWORD align - alignment.
-    // 
-    // DESCRIPTION: 
-    // Aligns argument value with the given alignment.
-    // 
-    // Documentation links:
-    // Alignment: https://learn.microsoft.com/en-us/cpp/cpp/alignment-cpp-declarations?view=msvc-170
-    // 
-    // RETURN VALUE: 
-    // DWORD aligned value.
-    // 
-    //**********************************************************************************
-    DWORD alignUp(DWORD value, DWORD align)
-    {
-        DWORD mod = value % align;
-        return value + (mod ? (align - mod) : 0);
-    };
+
 
     //**********************************************************************************
     // FUNCTION: rva2offset(IMAGE_NTPE_DATA& ntpe, DWORD rva)
@@ -67,21 +46,16 @@ namespace ntpe
     // g_kRvaError (-1) in case of error.
     // 
     //**********************************************************************************
-    int64_t rva2offset(IMAGE_NTPE_DATA& ntpe, uint64_t rva)
+    int64_t rva2offset(IMAGE_NTPE_CONTEXT& ntpe, uint64_t rva)
     {
         /* retrieve first section */
         try
         {
-            /* if rva is inside MZ header */
-            PIMAGE_SECTION_HEADER sec = ntpe.sectionDirectories;
-            if (!ntpe.fileHeader->NumberOfSections || rva < sec->VirtualAddress)
-                return rva;
-
             /* walk on sections */
-            for (uint32_t sectionIndex = 0; sectionIndex < ntpe.fileHeader->NumberOfSections; sectionIndex++, sec++)
+            for (uint64_t secIndex = 0; secIndex < ntpe.ntHeader64->FileHeader.NumberOfSections; secIndex++)
             {
-                /* count section end and allign it after each iteration */
-                DWORD secEnd = ntpe::alignUp(sec->Misc.VirtualSize, ntpe.SecAlign) + sec->VirtualAddress;
+                PIMAGE_SECTION_HEADER sec = ntpe.sectionDirectories + secIndex;
+                DWORD secEnd = tools::alignUp(sec->Misc.VirtualSize, ntpe.SecAlign) + sec->VirtualAddress;
                 if (sec->VirtualAddress <= rva && secEnd > rva)
                     return rva - sec->VirtualAddress + sec->PointerToRawData;
             };
@@ -114,13 +88,17 @@ namespace ntpe
     #define initNTPE(HeaderType, cellSize) \
     { \
     char* ntstdHeader       = (char*)fileHeader + sizeof(IMAGE_FILE_HEADER); \
+    data.fileBase           = fileMapBase; \
+    data.fileSize           = fileSize; \
+    data.ntHeader64         = (PIMAGE_NT_HEADERS64)peSignature; \
     HeaderType* optHeader   = (HeaderType*)ntstdHeader; \
     data.sectionDirectories = (PIMAGE_SECTION_HEADER)(ntstdHeader + sizeof(HeaderType)); \
     data.SecAlign           = optHeader->SectionAlignment; \
+    data.FileAlign          = optHeader->FileAlignment; \
     data.dataDirectories    = optHeader->DataDirectory; \
     data.CellSize           = cellSize;	\
     }
-    std::optional<IMAGE_NTPE_DATA> getNTPEData(char* fileMapBase, uint64_t fileSize)
+    std::optional<IMAGE_NTPE_CONTEXT> getNTPEContext(char* fileMapBase, uint64_t fileSize)
     {
         try
         {
@@ -147,31 +125,46 @@ namespace ntpe
                 return std::nullopt;
 
             /* result IMAGE_NTPE_DATA structure with info from PE file */
-            IMAGE_NTPE_DATA data = {};
-
-            /* base address and File header address assignment */
-            data.fileBase = fileMapBase;
-            data.fileHeader = fileHeader;
+            IMAGE_NTPE_CONTEXT data = {};
 
             /* addresses of PIMAGE_SECTION_HEADER, PIMAGE_DATA_DIRECTORIES, SectionAlignment, CellSize depending on processor architecture */
             switch (fileHeader->Machine)
             {
             case IMAGE_FILE_MACHINE_I386:
                 initNTPE(IMAGE_OPTIONAL_HEADER32, 4);
-                return data;
+                break;
 
             case IMAGE_FILE_MACHINE_AMD64:
                 initNTPE(IMAGE_OPTIONAL_HEADER64, 8);
-                return data;
+                break;
+
+            default:
+                return std::nullopt;
             }
+
+            return data;
         }
         catch (std::exception&)
         {
-
         }
         return std::nullopt;
     }
 
+    std::optional<IMAGE_NTPE_DATA> getNTPEData(const ntpe::IMAGE_NTPE_CONTEXT& ntCtx)
+    {
+        try
+        {
+            ntpe::IMAGE_NTPE_DATA data;
+            data.dosHeader  = *(PIMAGE_DOS_HEADER)(ntCtx.fileBase);
+            data.ntHeader64 = *ntCtx.ntHeader64;
+            for (uint64_t secIndex = 0; secIndex < ntCtx.ntHeader64->FileHeader.NumberOfSections; secIndex++)
+                data.secHeaders.push_back(*(ntCtx.sectionDirectories + secIndex));
+        }
+        catch (std::exception&)
+        {
+        }
+        return std::nullopt;
+    }
 
     //**********************************************************************************
     // FUNCTION: getImportList(IMAGE_NTPE_DATA& ntpe)
@@ -192,7 +185,7 @@ namespace ntpe
     // std::nullopt in case of error.
     // 
     //**********************************************************************************
-    std::optional<IMPORT_LIST> getImportList(IMAGE_NTPE_DATA& ntpe)
+    std::optional<IMPORT_LIST> getImportList(IMAGE_NTPE_CONTEXT& ntpe)
     {
         try
         {
@@ -244,81 +237,5 @@ namespace ntpe
         }
     };
 
-    //**********************************************************************************
-    // FUNCTION: getImportList(IMAGE_NTPE_DATA& ntpe)
-    // 
-    // ARGS:
-    // std::wstring_view filePath - path to file.
-    // 
-    // DESCRIPTION: 
-    // Retrieves IMPORT_LIST(std::map<std::string, std::set<std::string>>) with all loaded into PE libraries names and imported functions bu path.
-    // Map key: loaded dll's names. 
-    // Map value: set of imported functions names.
-    //
-    // Documentation links:
-    // Import Directory Table: https://learn.microsoft.com/en-us/windows/win32/debug/pe-format#import-directory-table
-    //
-    // RETURN VALUE: 
-    // std::optional<IMPORT_LIST>. 
-    // std::nullopt in case of error.
-    // 
-    //**********************************************************************************
-    std::optional<IMPORT_LIST> getImportList(std::wstring_view filePath)
-    {
-        std::vector<char> buffer;
-        /* obtain base address of mapped file from tools::readFile function */
-        bool result = tools::readFile(filePath, buffer);
-        /* return nullopt if readFile failes or obtained buffer is empty */
-        if (!result || buffer.empty())
-            return std::nullopt;
-        /* get IMAGE_NTPE_DATA from base address of mapped file */
-        std::optional<IMAGE_NTPE_DATA> ntpe = getNTPEData(buffer.data(), buffer.size());
-        if (!ntpe)
-            return std::nullopt;
-        /* return result of overloaded getImportList function with IMAGE_NTPE_DATA as argument */
-        return getImportList(*ntpe);
-    }
-
-
-    //**********************************************************************************
-    // FUNCTION: getSectionsList(IMAGE_NTPE_DATA& ntpe)
-    // 
-    // ARGS:
-    // IMAGE_NTPE_DATA& ntpe - data from PE file.
-    // 
-    // DESCRIPTION: 
-    // Retrieves SECTIONS_LIST from IMAGE_NTPE_DATA.
-    // SECTIONS_LIST - vector of sections headers from portable executable file.
-    // Sections names exmaple: .data, .code, .src
-    //  
-    // Documentation links:
-    // IMAGE_SECTION_HEADER: https://learn.microsoft.com/en-us/windows/win32/api/winnt/ns-winnt-image_section_header
-    // Section Table (Section Headers): https://learn.microsoft.com/en-us/windows/win32/debug/pe-format#section-table-section-headers
-    // 
-    // RETURN VALUE: 
-    // std::optional<SECTIONS_LIST>. 
-    // std::nullopt in case of error.
-    // 
-    //**********************************************************************************
-    std::optional<SECTIONS_LIST> getSectionsList(IMAGE_NTPE_DATA& ntpe)
-    {
-        try
-        {
-            /* result vector of section directories */
-            SECTIONS_LIST result;
-
-            /* iterations through all image section headers poiners in IMAGE_NTPE_DATA structure */
-            for (uint64_t sectionIndex = 0; sectionIndex < ntpe.fileHeader->NumberOfSections; sectionIndex++)
-            {
-                /* pushing IMAGE_SECTION_HEADER from iamge section headers */
-                result.push_back(ntpe.sectionDirectories[sectionIndex]);
-            }
-            return result;
-        }
-        catch (std::exception&)
-        {
-        }
-        /* returns nullopt in case of error */
-        return std::nullopt;
-    }
 }
+

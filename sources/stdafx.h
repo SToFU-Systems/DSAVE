@@ -1,5 +1,7 @@
 #pragma once
 
+#define MAX_LONG_PATH_LEN 0x8000
+
 #include <algorithm>
 #include <fstream>
 #include <filesystem>
@@ -18,5 +20,6 @@
 
 #include "Tools.h"
 #include "NTPEParser.h"
-#include "ImportKB.h"
+#include "FileInformation.h"
+#include "ImportTools.h"
 

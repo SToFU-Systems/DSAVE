@@ -24,7 +24,7 @@
     <ProjectGuid>{1a67acc7-2fa8-4eb4-9e82-bcc06ba50aab}</ProjectGuid>
     <RootNamespace>ImportChecker</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
-    <ProjectName>DSAVEScanner</ProjectName>
+    <ProjectName>DSAVELibrary</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -180,8 +180,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="FileInformation.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="ImportKB.cpp" />
+    <ClCompile Include="ImportTools.cpp" />
     <ClCompile Include="NTPEParser.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -192,7 +193,8 @@
     <ClCompile Include="Tools.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="importKB.h" />
+    <ClInclude Include="FileInformation.h" />
+    <ClInclude Include="ImportTools.h" />
     <ClInclude Include="NTPEParser.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="Tools.h" />

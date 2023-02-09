@@ -22,21 +22,7 @@
 #pragma once
 #include "NTPEParser.h"
 
-namespace importKB
+namespace importTools
 {
-    struct ApiData
-    {
-        uint32_t cnt = 0;
-    };
-    struct ModData
-    {
-        uint32_t cnt = 0;
-        std::map<std::string, ApiData> ApiMap;
-    };
-
-    typedef std::vector<ntpe::IMPORT_LIST> IMPORT_KNOWLEDGE_BASE;
-    typedef std::map<std::string, ModData> IMPORT_STAT;
-    
-    IMPORT_STAT           createStatisticBase(const IMPORT_KNOWLEDGE_BASE& knowledgeBase);
-    IMPORT_KNOWLEDGE_BASE createKnowledgeBase(const tools::FILES_LIST& fileList);
+    bool createKnowledgeBase(const tools::FILES_LIST& fileList, FILE_INFORMATION_DATABASE& db);
 }

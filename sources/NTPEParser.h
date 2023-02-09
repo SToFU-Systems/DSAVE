@@ -26,24 +26,39 @@
 
 namespace ntpe
 {
-    struct IMAGE_NTPE_DATA
+    struct IMAGE_NTPE_CONTEXT
     {
         PCHAR                       fileBase;
-        PIMAGE_FILE_HEADER          fileHeader;
+        size_t                      fileSize;
+        union {
+            PIMAGE_NT_HEADERS32     ntHeader32;
+            PIMAGE_NT_HEADERS64     ntHeader64;
+        };
         PIMAGE_DATA_DIRECTORY       dataDirectories;
         PIMAGE_SECTION_HEADER       sectionDirectories;
         DWORD                       SecAlign;
+        DWORD                       FileAlign;
         WORD                        CellSize;			//	size of cell of LookupTable/AddressTable
+    };
+
+    struct IMAGE_NTPE_DATA
+    {
+        IMAGE_DOS_HEADER dosHeader;
+        union {
+            IMAGE_NT_HEADERS32 ntHeader32;
+            IMAGE_NT_HEADERS64 ntHeader64;
+        };
+        std::vector<IMAGE_SECTION_HEADER> secHeaders;
     };
 
     typedef std::map<std::string, std::set<std::string>> IMPORT_LIST;
     typedef std::vector<IMAGE_SECTION_HEADER> SECTIONS_LIST;
 
-    DWORD                          alignUp              (DWORD value, DWORD align);
-    std::optional<IMAGE_NTPE_DATA> getNTPEData          (char* fileMapBase, uint64_t fileSize);
-    std::optional<SECTIONS_LIST>   getSectionsList      (IMAGE_NTPE_DATA& ntpe);
-    std::optional<IMPORT_LIST>     getImportList        (IMAGE_NTPE_DATA& ntpe);
-    std::optional<IMPORT_LIST>	   getImportList        (std::wstring_view filePath);
+
+    std::optional<IMAGE_NTPE_CONTEXT>  getNTPEContext   (char* fileMapBase, uint64_t fileSize);
+    std::optional<IMAGE_NTPE_DATA>     getNTPEData      (const IMAGE_NTPE_CONTEXT& ntCtx);
+    std::optional<SECTIONS_LIST>       getSectionsList  (IMAGE_NTPE_CONTEXT& ntpe);
+    std::optional<IMPORT_LIST>         getImportList    (IMAGE_NTPE_CONTEXT& ntpe);
 }
 
 

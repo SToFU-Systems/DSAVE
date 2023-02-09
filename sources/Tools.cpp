@@ -26,6 +26,12 @@ namespace tools
 {
 namespace fs = std::filesystem;
 
+uint64_t alignUp(uint64_t value, uint64_t align)
+{
+    uint64_t mod = value % align;
+    return value + (mod ? (align - mod) : 0);
+};
+
 bool readFile(std::wstring_view filePath, _Out_ std::vector<char>& fileData)
 {
     bool result = false;
@@ -93,6 +99,29 @@ FILES_LIST getFilesList(std::wstring_view directory, std::wstring_view matchSpec
         }
     }
     return filesList;
+}
+
+std::wstring pathToFullLwr(std::wstring_view path)
+{
+    std::vector<wchar_t> fullPath(MAX_LONG_PATH_LEN);
+    if (GetFullPathNameW(path.data(), fullPath.size(), fullPath.data(), nullptr))
+    {
+        _wcslwr_s(fullPath.data(), fullPath.size());
+        return fullPath.data();
+    }
+    return {};
+}
+
+std::wstring getDirectoryPathFromFilePath(std::wstring_view filePath)
+{
+    std::vector<wchar_t> fullPath(32 * 0x400);
+    wchar_t* filePart = nullptr;
+
+    if (GetFullPathNameW(filePath.data(), fullPath.size(), fullPath.data(), &filePart))
+        if (filePart)
+            *filePart = 0;
+
+    return fullPath.data();
 }
 
 std::wstring toUtf16(std::string_view utf8)

@@ -21,53 +21,31 @@
 
 #include "stdafx.h"
 #include <windows.h>
-#include "importKB.h"
+#include "importTools.h"
 
-namespace importKB
+namespace importTools
 {
-bool removePackedFiles(IMPORT_KNOWLEDGE_BASE& knowledgeBase)
-{
-    static const uint32_t kMinValue = 4;
-    for (auto fileIt = knowledgeBase.begin(); fileIt != knowledgeBase.end(); )
-    {
-        bool needToDelete = false;
-        if (fileIt->size() <= kMinValue || (*fileIt)["KERNEL32.DLL"].size() <= kMinValue)
-            fileIt = knowledgeBase.erase(fileIt);
-        else
-            fileIt++;
-    }
-    return true;
-}
-
-bool removeNonNativeModules(IMPORT_KNOWLEDGE_BASE& knowledgeBase)
+bool removeNonNativeModules(ntpe::IMPORT_LIST& importList)
 {
     std::vector<char> modPath(0x8000);
 
-    for (auto fileIt = knowledgeBase.begin(); fileIt != knowledgeBase.end(); )
+    for (auto modIt = importList.begin(); modIt != importList.end(); )
     {
-        for (auto it = fileIt->begin(); it != fileIt->end(); )
-        {
-            if (!SearchPathA(nullptr, it->first.c_str(), 0, modPath.size(), modPath.data(), nullptr))
-                it = fileIt->erase(it);
-            else 
-                it++;
-        }
-
-        if (fileIt->empty())
-            fileIt = knowledgeBase.erase(fileIt);
-        else 
-            fileIt++;
+        if (!SearchPathA(nullptr, modIt->first.c_str(), 0, modPath.size(), modPath.data(), nullptr))
+            modIt = importList.erase(modIt);
+        else
+            modIt++;
     }
     return true;
 };
 
-
-std::vector<ntpe::IMPORT_LIST> createKnowledgeBase(const tools::FILES_LIST& fileList)
+bool createKnowledgeBase(const tools::FILES_LIST& fileList, FILE_INFORMATION_DATABASE& db)
 {
     static const uint32_t kNumOfThreadsPerCore = 3;
-    IMPORT_KNOWLEDGE_BASE knowledgeBase;
     SYSTEM_INFO sysInfo = {};
     std::mutex  statGuard;
+
+    
 
     try
     {
@@ -78,12 +56,26 @@ std::vector<ntpe::IMPORT_LIST> createKnowledgeBase(const tools::FILES_LIST& file
 
             for (it; it != itEnd && it != fileList.end(); it++)
             {
-                if (auto importList = ntpe::getImportList(*it))
+                std::wstring path = tools::pathToFullLwr(*it);
+                std::vector<char> file;
+                tools::readFile(path, file);
+                auto ntpeCtx = ntpe::getNTPEContext(file.data(), file.size());
+                if (!ntpeCtx)
+                    continue;
+
+                if (auto importList = ntpe::getImportList(*ntpeCtx))
                 {
                     if (!importList->empty())
                     {
+                        //  remove not native modules from list
+                        removeNonNativeModules(*importList);
+
+                        //  add import list
                         std::scoped_lock<std::mutex> lock(statGuard);
-                        knowledgeBase.emplace_back(*importList);
+                        db[path].setPath(path);
+                        db[path].setPE(*ntpeCtx);
+                        db[path].setImport(*importList);
+                        
                     }
                 }
             }
@@ -101,32 +93,7 @@ std::vector<ntpe::IMPORT_LIST> createKnowledgeBase(const tools::FILES_LIST& file
     {
     }
 
-    removeNonNativeModules(knowledgeBase);
-    removePackedFiles(knowledgeBase);
-    std::sort(knowledgeBase.begin(), knowledgeBase.end(), [](const ntpe::IMPORT_LIST& a, const ntpe::IMPORT_LIST& b) {
-            return a.size() > b.size();
-        });
-    return knowledgeBase;
+    return true;
 };
-
-
-IMPORT_STAT createStatisticBase(const IMPORT_KNOWLEDGE_BASE& knowledgeBase)
-{
-    IMPORT_STAT impStat;
-
-    for (const auto& it : knowledgeBase)
-    {
-        for (auto const& itMod : it)
-        {
-            impStat[itMod.first].cnt++;
-            for (auto const& itApi : itMod.second)
-            {
-                impStat[itMod.first].ApiMap[itApi].cnt++;
-            }
-        }
-    }
-
-    return impStat;
-}
 
 };

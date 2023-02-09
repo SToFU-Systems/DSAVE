@@ -13,14 +13,17 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\Knowledgebase">
-      <UniqueIdentifier>{a02f7337-f7f8-4454-a4b4-dcfb4bba9768}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Tools">
       <UniqueIdentifier>{5c710c7b-137c-4444-ad81-3c3fcac0d5b5}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\NtPE">
       <UniqueIdentifier>{1f21d046-d899-404f-8d88-d15663366f76}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\FileInformation">
+      <UniqueIdentifier>{dcc7c1e4-9c69-4b02-ae0c-ff0ad28c3eb7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\ImportTools">
+      <UniqueIdentifier>{a02f7337-f7f8-4454-a4b4-dcfb4bba9768}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -30,8 +33,8 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ImportKB.cpp">
-      <Filter>Source Files\Knowledgebase</Filter>
+    <ClCompile Include="ImportTools.cpp">
+      <Filter>Source Files\ImportTools</Filter>
     </ClCompile>
     <ClCompile Include="Tools.cpp">
       <Filter>Source Files\Tools</Filter>
@@ -39,19 +42,25 @@
     <ClCompile Include="NTPEParser.cpp">
       <Filter>Source Files\NtPE</Filter>
     </ClCompile>
+    <ClCompile Include="FileInformation.cpp">
+      <Filter>Source Files\FileInformation</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="importKB.h">
-      <Filter>Source Files\Knowledgebase</Filter>
+    <ClInclude Include="ImportTools.h">
+      <Filter>Source Files\ImportTools</Filter>
     </ClInclude>
     <ClInclude Include="Tools.h">
       <Filter>Source Files\Tools</Filter>
     </ClInclude>
     <ClInclude Include="NTPEParser.h">
       <Filter>Source Files\NtPE</Filter>
+    </ClInclude>
+    <ClInclude Include="FileInformation.h">
+      <Filter>Source Files\FileInformation</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

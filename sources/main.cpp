@@ -23,18 +23,6 @@
 
 int main()
 {
-    wchar_t modpath[MAX_PATH] = {};
-    if (GetModuleFileNameW(0, modpath, _countof(modpath)))
-    {
-        auto imp = ntpe::getImportList(modpath);
-        for (auto &modIt : *imp)
-        {
-            for (auto apiIt : modIt.second)
-            {
-                std::cout << modIt.first + " : " + apiIt << std::endl;
-            }
-        }
-    }
     return 1; 
 }
 
