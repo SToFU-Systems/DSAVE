@@ -20,3 +20,20 @@
  */
 
 #include "stdafx.h"
+#include "ssdeep_wrap.h"
+#include "fuzzy.h"
+
+namespace hashes
+{
+    std::string ssdeepHash(const void* buffer, uint64_t size)
+    {
+        char raw[FUZZY_MAX_RESULT] = {};
+        fuzzy_hash_buf((unsigned char*)buffer, size, raw);
+        return raw;
+    }
+
+    int ssdeepDiff(std::string_view a, std::string_view b)
+    {
+        return fuzzy_compare(a.data(), b.data());
+    }
+}

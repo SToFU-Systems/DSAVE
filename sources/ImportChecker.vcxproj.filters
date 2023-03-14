@@ -22,8 +22,29 @@
     <Filter Include="Source Files\FileInformation">
       <UniqueIdentifier>{dcc7c1e4-9c69-4b02-ae0c-ff0ad28c3eb7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\ImportTools">
+    <Filter Include="Source Files\Import">
       <UniqueIdentifier>{a02f7337-f7f8-4454-a4b4-dcfb4bba9768}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Math">
+      <UniqueIdentifier>{2e703227-23b4-4278-8e18-b1d074738cf5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd-party">
+      <UniqueIdentifier>{42bc5015-e9c2-4939-beb5-2c3cbc1d4daa}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd-party\polarssl">
+      <UniqueIdentifier>{77a28717-6917-45b8-adfe-34821eac6c41}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd-party\ssdeep">
+      <UniqueIdentifier>{e4e5fe9b-1d66-436b-8db4-60a9eef6c119}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd-party\tlsh">
+      <UniqueIdentifier>{3344bbb4-093b-4585-ad1d-fb1010338199}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd-party\ssdeep\src">
+      <UniqueIdentifier>{70484f67-f8ce-4ea6-a372-44ded4177dfe}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="3rd-party\tlsh\src">
+      <UniqueIdentifier>{36259c4e-f35e-4ef8-a9b5-69c1dd11d33b}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -33,8 +54,8 @@
     <ClCompile Include="stdafx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ImportTools.cpp">
-      <Filter>Source Files\ImportTools</Filter>
+    <ClCompile Include="Import.cpp">
+      <Filter>Source Files\Import</Filter>
     </ClCompile>
     <ClCompile Include="Tools.cpp">
       <Filter>Source Files\Tools</Filter>
@@ -45,13 +66,49 @@
     <ClCompile Include="FileInformation.cpp">
       <Filter>Source Files\FileInformation</Filter>
     </ClCompile>
+    <ClCompile Include="Math.cpp">
+      <Filter>Source Files\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="3rd-party\polarssl\md5.cpp">
+      <Filter>3rd-party\polarssl</Filter>
+    </ClCompile>
+    <ClCompile Include="3rd-party\polarssl\sha1.cpp">
+      <Filter>3rd-party\polarssl</Filter>
+    </ClCompile>
+    <ClCompile Include="3rd-party\polarssl\sha4.cpp">
+      <Filter>3rd-party\polarssl</Filter>
+    </ClCompile>
+    <ClCompile Include="3rd-party\tlsh\tlsh_wrap.cpp">
+      <Filter>3rd-party\tlsh</Filter>
+    </ClCompile>
+    <ClCompile Include="3rd-party\ssdeep\ssdeep_wrap.cpp">
+      <Filter>3rd-party\ssdeep</Filter>
+    </ClCompile>
+    <ClCompile Include="3rd-party\ssdeep\fuzzy.cpp">
+      <Filter>3rd-party\ssdeep\src</Filter>
+    </ClCompile>
+    <ClCompile Include="3rd-party\ssdeep\edit_dist.cpp">
+      <Filter>3rd-party\ssdeep\src</Filter>
+    </ClCompile>
+    <ClCompile Include="3rd-party\tlsh\tlsh.cpp">
+      <Filter>3rd-party\tlsh\src</Filter>
+    </ClCompile>
+    <ClCompile Include="3rd-party\tlsh\tlsh_impl.cpp">
+      <Filter>3rd-party\tlsh\src</Filter>
+    </ClCompile>
+    <ClCompile Include="3rd-party\tlsh\tlsh_util.cpp">
+      <Filter>3rd-party\tlsh\src</Filter>
+    </ClCompile>
+    <ClCompile Include="console.cpp">
+      <Filter>Source Files\Tools</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ImportTools.h">
-      <Filter>Source Files\ImportTools</Filter>
+    <ClInclude Include="Import.h">
+      <Filter>Source Files\Import</Filter>
     </ClInclude>
     <ClInclude Include="Tools.h">
       <Filter>Source Files\Tools</Filter>
@@ -61,6 +118,48 @@
     </ClInclude>
     <ClInclude Include="FileInformation.h">
       <Filter>Source Files\FileInformation</Filter>
+    </ClInclude>
+    <ClInclude Include="Math.h">
+      <Filter>Source Files\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd-party\polarssl\md5.h">
+      <Filter>3rd-party\polarssl</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd-party\polarssl\sha1.h">
+      <Filter>3rd-party\polarssl</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd-party\polarssl\sha4.h">
+      <Filter>3rd-party\polarssl</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd-party\tlsh\tlsh_wrap.h">
+      <Filter>3rd-party\tlsh</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd-party\ssdeep\ssdeep_wrap.h">
+      <Filter>3rd-party\ssdeep</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd-party\ssdeep\sum_table.h">
+      <Filter>3rd-party\ssdeep\src</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd-party\ssdeep\fuzzy.h">
+      <Filter>3rd-party\ssdeep\src</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd-party\ssdeep\edit_dist.h">
+      <Filter>3rd-party\ssdeep\src</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd-party\tlsh\tlsh_win_version.h">
+      <Filter>3rd-party\tlsh\src</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd-party\tlsh\tlsh.h">
+      <Filter>3rd-party\tlsh\src</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd-party\tlsh\tlsh_impl.h">
+      <Filter>3rd-party\tlsh\src</Filter>
+    </ClInclude>
+    <ClInclude Include="3rd-party\tlsh\tlsh_util.h">
+      <Filter>3rd-party\tlsh\src</Filter>
+    </ClInclude>
+    <ClInclude Include="console.h">
+      <Filter>Source Files\Tools</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

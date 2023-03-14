@@ -1,5 +1,25 @@
-#pragma once
+/*
+ *
+ *  Copyright (C) 2022, SToFU Systems S.L.
+ *  All rights reserved.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ */
 
+#pragma once
 
 class FileInformation
 {
@@ -7,14 +27,11 @@ public:
     //  setters
     void setPath   (std::wstring_view filePath);
     void setPE     (const ntpe::IMAGE_NTPE_CONTEXT& nt);
-    void setImport (const ntpe::IMPORT_LIST& imp);
+    void setImport (const Import::IMPORT_LIST& imp);
     
 private:
     std::wstring          m_FullPath; 
     ntpe::IMAGE_NTPE_DATA m_NtPE;
-    ntpe::IMPORT_LIST     m_ImportList;
+    Import::IMPORT_LIST   m_ImportList;
 };
 
-typedef std::map<std::wstring, FileInformation> FILE_INFORMATION_DATABASE;
-
-extern FILE_INFORMATION_DATABASE g_FileInformationDB;

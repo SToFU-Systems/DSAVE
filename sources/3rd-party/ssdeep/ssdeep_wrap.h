@@ -19,4 +19,12 @@
  *
  */
 
-#include "stdafx.h"
+#pragma once
+
+#include <string>
+
+namespace hashes
+{
+    std::string ssdeepHash(const void* buffer, uint64_t size);
+    int ssdeepDiff (std::string_view a, std::string_view b);
+}

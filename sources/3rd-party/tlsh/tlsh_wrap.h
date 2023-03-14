@@ -19,4 +19,10 @@
  *
  */
 
-#include "stdafx.h"
+#pragma once
+
+namespace hashes
+{
+    std::string tlshHash(const void* buffer, uint64_t size);
+    int tlshDiff(std::string_view hashA, std::string_view hashB);
+}

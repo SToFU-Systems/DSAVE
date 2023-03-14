@@ -20,3 +20,26 @@
  */
 
 #include "stdafx.h"
+#include <string>
+#include "tlsh_wrap.h"
+#include "tlsh.h"
+
+namespace hashes
+{
+    std::string tlshHash(const void* buffer, uint64_t size)
+    {
+        Tlsh t; 
+        t.update((const unsigned char*)buffer, size);
+        t.final();
+        return t.getHash();
+    }
+
+
+    int tlshDiff(std::string_view hashA, std::string_view hashB)
+    {
+        Tlsh a, b;
+        a.fromTlshStr(hashA.data());
+        b.fromTlshStr(hashB.data());
+        return a.totalDiff(&b);
+    }
+}

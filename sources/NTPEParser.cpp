@@ -25,12 +25,6 @@ namespace ntpe
 {
     static constexpr uint64_t g_kRvaError = -1;
 
-    // These types is defined in NTPEParser.h
-    // typedef std::map<std::string, std::set<std::string>> IMPORT_LIST;
-    // typedef std::vector<IMAGE_SECTION_HEADER> SECTIONS_LIST;
-
-
-
     //**********************************************************************************
     // FUNCTION: rva2offset(IMAGE_NTPE_DATA& ntpe, DWORD rva)
     // 
@@ -46,7 +40,7 @@ namespace ntpe
     // g_kRvaError (-1) in case of error.
     // 
     //**********************************************************************************
-    int64_t rva2offset(IMAGE_NTPE_CONTEXT& ntpe, uint64_t rva)
+    uint64_t rva2offset(const ntpe::IMAGE_NTPE_CONTEXT& ntpe, uint64_t rva)
     {
         /* retrieve first section */
         try
@@ -55,7 +49,7 @@ namespace ntpe
             for (uint64_t secIndex = 0; secIndex < ntpe.ntHeader64->FileHeader.NumberOfSections; secIndex++)
             {
                 PIMAGE_SECTION_HEADER sec = ntpe.sectionDirectories + secIndex;
-                DWORD secEnd = tools::alignUp(sec->Misc.VirtualSize, ntpe.SecAlign) + sec->VirtualAddress;
+                DWORD secEnd = math::alignUp(sec->Misc.VirtualSize, ntpe.SecAlign) + sec->VirtualAddress;
                 if (sec->VirtualAddress <= rva && secEnd > rva)
                     return rva - sec->VirtualAddress + sec->PointerToRawData;
             };
@@ -166,76 +160,6 @@ namespace ntpe
         return std::nullopt;
     }
 
-    //**********************************************************************************
-    // FUNCTION: getImportList(IMAGE_NTPE_DATA& ntpe)
-    // 
-    // ARGS:
-    // IMAGE_NTPE_DATA& ntpe - data from PE file.
-    // 
-    // DESCRIPTION: 
-    // Retrieves IMPORT_LIST(std::map<std::string, std::set<std::string>>) with all loaded into PE libraries names and imported functions.
-    // Map key: loaded dll's names. 
-    // Map value: set of imported functions names.
-    //
-    // Documentation links:
-    // Import Directory Table: https://learn.microsoft.com/en-us/windows/win32/debug/pe-format#import-directory-table
-    //
-    // RETURN VALUE: 
-    // std::optional<IMPORT_LIST>. 
-    // std::nullopt in case of error.
-    // 
-    //**********************************************************************************
-    std::optional<IMPORT_LIST> getImportList(IMAGE_NTPE_CONTEXT& ntpe)
-    {
-        try
-        {
-            /* if no imaage import directory in file returns std::nullopt */
-            if (ntpe.dataDirectories[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress == 0)
-                return std::nullopt;
-
-            IMPORT_LIST result;
-
-            /* import table offset */
-            uint64_t impOffset = rva2offset(ntpe, ntpe.dataDirectories[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
-
-            /* imoprt table descriptor from import table offset + file base adress */
-            PIMAGE_IMPORT_DESCRIPTOR impTable = (PIMAGE_IMPORT_DESCRIPTOR)(impOffset + ntpe.fileBase);
-
-            /* while names in import table */
-            while (impTable->Name != 0)
-            {
-                /* pointer to DLL name from offset of current section name + file base adress */
-                std::string modname = rva2offset(ntpe, impTable->Name) + ntpe.fileBase;
-                std::transform(modname.begin(), modname.end(), modname.begin(), ::toupper);
-
-                /* start adress of names in look up table from import table name RVA */
-                char* cell = ntpe.fileBase + ((impTable->OriginalFirstThunk) ? rva2offset(ntpe, impTable->OriginalFirstThunk) : rva2offset(ntpe, impTable->FirstThunk));
-
-                /* while names in look up table */
-                for (;; cell += ntpe.CellSize)
-                {
-                    int64_t rva = 0;
-
-                    /* break if rva = 0 */
-                    memcpy(&rva, cell, ntpe.CellSize);
-                    if (!rva)
-                        break;
-
-                    /* if rva > 0 function was imported by name. if rva < 0 function was imported by ordinall */
-                    if (rva > 0)
-                        result[modname].emplace(ntpe.fileBase + rva2offset(ntpe, rva) + 2);
-                    else
-                        result[modname].emplace(std::string("#ord: ") + std::to_string(rva & 0xFFFF));
-                };
-                impTable++;
-            };
-            return result;
-        }
-        catch (std::exception&)
-        {
-            return std::nullopt;
-        }
-    };
 
 }
 

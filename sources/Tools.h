@@ -20,12 +20,12 @@
  */
 
 #pragma once
+#include "console.h"
 
 namespace tools
 {
     typedef std::set<std::wstring> FILES_LIST;
 
-    uint64_t alignUp(uint64_t value, uint64_t align);
     bool readFile(std::wstring_view filePath, _Out_ std::vector<char>& fileData);
     std::set<std::wstring> getFilesList(std::wstring_view directory, std::wstring_view matchSpec);
     std::wstring toUtf16(std::string_view utf8);

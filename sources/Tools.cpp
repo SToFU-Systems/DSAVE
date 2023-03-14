@@ -26,12 +26,6 @@ namespace tools
 {
 namespace fs = std::filesystem;
 
-uint64_t alignUp(uint64_t value, uint64_t align)
-{
-    uint64_t mod = value % align;
-    return value + (mod ? (align - mod) : 0);
-};
-
 bool readFile(std::wstring_view filePath, _Out_ std::vector<char>& fileData)
 {
     bool result = false;

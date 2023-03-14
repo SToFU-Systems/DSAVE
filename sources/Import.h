@@ -19,4 +19,13 @@
  *
  */
 
-#include "stdafx.h"
+#pragma once
+#include "NTPEParser.h"
+
+namespace Import
+{
+    typedef std::map<std::string, std::set<std::string>> IMPORT_LIST;
+
+    std::optional<IMPORT_LIST> getImportList          (const ntpe::IMAGE_NTPE_CONTEXT& ntpe);
+    bool                       removeNonNativeModules (Import::IMPORT_LIST& importList);
+}

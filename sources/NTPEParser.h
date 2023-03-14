@@ -51,14 +51,9 @@ namespace ntpe
         std::vector<IMAGE_SECTION_HEADER> secHeaders;
     };
 
-    typedef std::map<std::string, std::set<std::string>> IMPORT_LIST;
-    typedef std::vector<IMAGE_SECTION_HEADER> SECTIONS_LIST;
-
-
+    uint64_t                           rva2offset       (const ntpe::IMAGE_NTPE_CONTEXT& ntpeCtx, uint64_t rva);
     std::optional<IMAGE_NTPE_CONTEXT>  getNTPEContext   (char* fileMapBase, uint64_t fileSize);
     std::optional<IMAGE_NTPE_DATA>     getNTPEData      (const IMAGE_NTPE_CONTEXT& ntCtx);
-    std::optional<SECTIONS_LIST>       getSectionsList  (IMAGE_NTPE_CONTEXT& ntpe);
-    std::optional<IMPORT_LIST>         getImportList    (IMAGE_NTPE_CONTEXT& ntpe);
 }
 
 

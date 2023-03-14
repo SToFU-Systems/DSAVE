@@ -13,13 +13,18 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <unordered_map>
+#include <ranges>
 
 #include <windows.h>
 #include <shlwapi.h>
 #include <winnt.h>
 
+#include "Math.h"
 #include "Tools.h"
 #include "NTPEParser.h"
+#include "Import.h"
+
 #include "FileInformation.h"
-#include "ImportTools.h"
+
 
