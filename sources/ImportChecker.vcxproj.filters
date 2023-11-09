@@ -46,6 +46,9 @@
     <Filter Include="3rd-party\tlsh\src">
       <UniqueIdentifier>{36259c4e-f35e-4ef8-a9b5-69c1dd11d33b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\Resources">
+      <UniqueIdentifier>{f59ed267-400e-4cf3-9616-28459342ff16}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
@@ -101,6 +104,9 @@
     </ClCompile>
     <ClCompile Include="console.cpp">
       <Filter>Source Files\Tools</Filter>
+    </ClCompile>
+    <ClCompile Include="Resources.cpp">
+      <Filter>Source Files\Resources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -160,6 +166,9 @@
     </ClInclude>
     <ClInclude Include="console.h">
       <Filter>Source Files\Tools</Filter>
+    </ClInclude>
+    <ClInclude Include="Resources.h">
+      <Filter>Source Files\Resources</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

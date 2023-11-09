@@ -22,6 +22,9 @@
 #include "stdafx.h"
 #include "Tools.h"
 
+#define ERROR_INVALID_ADDRESS (PBYTE)-1
+#define ERROR_INVALID_OFFSET  -1
+
 namespace tools
 {
 namespace fs = std::filesystem;
@@ -170,5 +173,36 @@ double entropy(const char* buff, uint64_t buffSize)
     /* cast entropy to uint64_t */
     return (entropy * -1);
 };
+
+uint64_t RvaToOffset(PBYTE pBase, uint64_t rva)
+{
+    IMAGE_DOS_HEADER* pDosHeader = reinterpret_cast<IMAGE_DOS_HEADER*>(pBase);
+    IMAGE_NT_HEADERS* pNtHeaders = reinterpret_cast<IMAGE_NT_HEADERS*>(pBase + pDosHeader->e_lfanew);
+    IMAGE_SECTION_HEADER* pSectionHeaders = IMAGE_FIRST_SECTION(pNtHeaders);
+
+    for (UINT i = 0; i < pNtHeaders->FileHeader.NumberOfSections; ++i)
+    {
+        uint64_t sectionStartRVA = pSectionHeaders[i].VirtualAddress;
+        uint64_t sectionEndRVA = sectionStartRVA + pSectionHeaders[i].Misc.VirtualSize;
+
+        if (rva >= sectionStartRVA && rva < sectionEndRVA)
+        {
+            uint64_t sectionStartRAW = pSectionHeaders[i].PointerToRawData;
+            return rva - sectionStartRVA + sectionStartRAW;
+        }
+    }
+
+    return ERROR_INVALID_OFFSET;
+}
+
+
+PBYTE RvaToRaw(PBYTE pBase, uint64_t rva) 
+{
+    uint64_t offset = RvaToOffset(pBase, rva);
+    if (offset == ERROR_INVALID_OFFSET)
+        return (PBYTE)ERROR_INVALID_ADDRESS; 
+    return pBase + offset;
+}
+
 
 }

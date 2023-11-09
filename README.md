@@ -7,6 +7,11 @@ Functional blocks are added gradually. Each new block is described in articles o
 We will be grateful for your comments and feedback.
 
 
+# MIND MAP
+
+https://mm.tt/map/2593049384?t=9ddkSZDiP4
+
+
 # License
 
 Copyright (C) 2022, SToFU Systems S.L.
