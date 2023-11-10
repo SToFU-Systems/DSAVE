@@ -29,7 +29,7 @@ namespace tools
 {
 namespace fs = std::filesystem;
 
-bool readFile(std::wstring_view filePath, _Out_ std::vector<char>& fileData)
+bool readFile(std::wstring_view filePath, _Out_ std::vector<BYTE>& fileData)
 {
     bool result = false;
     static const uint64_t kBlockSize = 0x100000;
@@ -136,6 +136,12 @@ std::wstring toUtf16(std::string_view utf8)
     return utf16;
 }
 
+uint64_t alignUp(uint64_t value, uint64_t alignment)
+{
+    uint64_t mod = value % alignment;
+    return mod ? (value + alignment - mod) : value;
+}
+
 //**********************************************************************************
 // FUNCTION: entropy(const char* buff, uint64_t buffSize)
 // 
@@ -180,10 +186,18 @@ uint64_t RvaToOffset(PBYTE pBase, uint64_t rva)
     IMAGE_NT_HEADERS* pNtHeaders = reinterpret_cast<IMAGE_NT_HEADERS*>(pBase + pDosHeader->e_lfanew);
     IMAGE_SECTION_HEADER* pSectionHeaders = IMAGE_FIRST_SECTION(pNtHeaders);
 
+    if (pNtHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_AMD64 &&
+        pNtHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_I386)
+        return ERROR_INVALID_OFFSET;
+
+    uint64_t sectionAlignment = pNtHeaders->FileHeader.Machine == IMAGE_FILE_MACHINE_I386 ? 
+        reinterpret_cast<IMAGE_NT_HEADERS64*>(pNtHeaders)->OptionalHeader.SectionAlignment :
+        reinterpret_cast<IMAGE_NT_HEADERS32*>(pNtHeaders)->OptionalHeader.SectionAlignment;
+
     for (UINT i = 0; i < pNtHeaders->FileHeader.NumberOfSections; ++i)
     {
         uint64_t sectionStartRVA = pSectionHeaders[i].VirtualAddress;
-        uint64_t sectionEndRVA = sectionStartRVA + pSectionHeaders[i].Misc.VirtualSize;
+        uint64_t sectionEndRVA   = alignUp(sectionStartRVA + pSectionHeaders[i].Misc.VirtualSize, sectionAlignment);
 
         if (rva >= sectionStartRVA && rva < sectionEndRVA)
         {

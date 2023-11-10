@@ -28,7 +28,7 @@ namespace ntpe
 {
     struct IMAGE_NTPE_CONTEXT
     {
-        PCHAR                       fileBase;
+        PBYTE                       fileBase;
         size_t                      fileSize;
         union {
             PIMAGE_NT_HEADERS32     ntHeader32;
@@ -52,7 +52,7 @@ namespace ntpe
     };
 
     uint64_t                           rva2offset       (const ntpe::IMAGE_NTPE_CONTEXT& ntpeCtx, uint64_t rva);
-    std::optional<IMAGE_NTPE_CONTEXT>  getNTPEContext   (char* fileMapBase, uint64_t fileSize);
+    std::optional<IMAGE_NTPE_CONTEXT>  getNTPEContext   (PBYTE fileMapBase, uint64_t fileSize);
     std::optional<IMAGE_NTPE_DATA>     getNTPEData      (const IMAGE_NTPE_CONTEXT& ntCtx);
 }
 

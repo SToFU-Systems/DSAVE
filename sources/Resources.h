@@ -23,6 +23,6 @@ struct ResourceInfo
     WORD  Language; // Language of the resource
 };
 
-bool GetAll(BYTE* pBase, std::vector<ResourceInfo>& resources);
+bool GetAll(BYTE* pBase, uint64_t fileSize, std::vector<ResourceInfo>& resources);
 
 }

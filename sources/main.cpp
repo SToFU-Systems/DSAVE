@@ -24,6 +24,7 @@
 #include <windows.h>
 #include <vector>
 #include <string>
+#include "resources.h"
 
 
 
@@ -31,7 +32,7 @@
 
 math::MathData printHashes(std::wstring_view filePath)
 {
-    std::ifstream fileStream(filePath, std::ios::binary);
+    std::ifstream fileStream(filePath.data(), std::ios::binary);
     std::vector<BYTE> file(std::istreambuf_iterator<char>(fileStream), {});
     math::MathData info = math::analyze(file.data(), file.size());
 
@@ -76,12 +77,25 @@ GNU General Public License for more details.\r\n\r\n\r\n");
 
     int argc = 0;
     wchar_t** argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-    std::wstring file1 = argv[1];
-    std::wstring file2 = argv[2];
+    std::wstring fileName1 = argv[1];
+    std::wstring fileName2 = argv[2];
 
+    std::vector<BYTE> file1;
+    std::vector<BYTE> file2;
+    tools::readFile(fileName1, file1);
+    tools::readFile(fileName2, file2);
+
+    //  parse import
+    auto imp = Import::getAll(file1.data(), file1.size());
+
+    //  parse resources
+    std::vector<Resources::ResourceInfo> res;
+    Resources::GetAll(file1.data(), file1.size(), res);
+    
+    //  hash calculator
     SetConsoleTitleA("DSAVE Hash calculator");
-    auto f1 = printHashes(file1);
-    auto f2 = printHashes(file2);
+    auto f1 = printHashes(fileName1);
+    auto f2 = printHashes(fileName2);
 
     auto diff = math::diff(f1.hashes, f2.hashes);
 

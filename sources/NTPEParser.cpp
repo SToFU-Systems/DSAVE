@@ -81,7 +81,7 @@ namespace ntpe
     //**********************************************************************************
     #define initNTPE(HeaderType, cellSize) \
     { \
-    char* ntstdHeader       = (char*)fileHeader + sizeof(IMAGE_FILE_HEADER); \
+    PBYTE ntstdHeader       = (PBYTE)fileHeader + sizeof(IMAGE_FILE_HEADER); \
     data.fileBase           = fileMapBase; \
     data.fileSize           = fileSize; \
     data.ntHeader64         = (PIMAGE_NT_HEADERS64)peSignature; \
@@ -92,7 +92,7 @@ namespace ntpe
     data.dataDirectories    = optHeader->DataDirectory; \
     data.CellSize           = cellSize;	\
     }
-    std::optional<IMAGE_NTPE_CONTEXT> getNTPEContext(char* fileMapBase, uint64_t fileSize)
+    std::optional<IMAGE_NTPE_CONTEXT> getNTPEContext(PBYTE fileMapBase, uint64_t fileSize)
     {
         try
         {
@@ -105,7 +105,7 @@ namespace ntpe
 
             /* PE signature adress from base address + offset of the PE header relative to the beginning of the file */
             PDWORD peSignature = (PDWORD)(fileMapBase + dosHeader->e_lfanew);
-            if ((char*)peSignature <= fileMapBase || (char*)peSignature - fileMapBase >= fileSize)
+            if ((PBYTE)peSignature <= fileMapBase || (PBYTE)peSignature - fileMapBase >= fileSize)
                 return std::nullopt;
 
             /* return std::nullopt in case of no PE signature */
