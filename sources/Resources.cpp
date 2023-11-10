@@ -1,5 +1,27 @@
+/*
+ *
+ *  Copyright (C) 2022, SToFU Systems S.L.
+ *  All rights reserved.
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License along
+ *  with this program; if not, write to the Free Software Foundation, Inc.,
+ *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ */
+
 #include "stdafx.h"
 #include "Resources.h"
+#include "NTPEParser.h"
 #include <windows.h>
 #include <iostream>
 #include <fstream>
@@ -23,25 +45,15 @@ namespace Resources
  * @param resources A reference to a vector that will be filled with ResourceInfo
  * structures, each representing a resource found within the PE file.
  *
- * @return true if the function successfully parses the PE file and finds resources,
- * false if the PE file is invalid or no resources are found.
- *
- * Usage example:
- *
- *     std::vector<ResourceInfo> resourceList;
- *     BYTE* pFile = ...; // Pointer to the loaded PE file data
- *     bool result = GetAll(pFile, resourceList);
- *     if (result) {
- *         // process resources
- *     }
  */
 //**********************************************************************************
 
-bool GetAll(BYTE* pBase, uint64_t fileSize, std::vector<ResourceInfo>& resources)
+std::optional<std::vector<ResourceInfo>> GetAll(BYTE* pBase, uint64_t fileSize)
 {
     IMAGE_RESOURCE_DIRECTORY* pTypesDirectory = nullptr;
+    std::vector<ResourceInfo> resources;
 
-    __try
+    try
     {
         //********************************************************
         //  parse PE header
@@ -51,7 +63,7 @@ bool GetAll(BYTE* pBase, uint64_t fileSize, std::vector<ResourceInfo>& resources
 
         // Verify that the PE signature is valid, indicating a valid PE file.
         if (pNtHeaders->Signature != IMAGE_NT_SIGNATURE)
-            return false;
+            return std::nullopt;
 
         // Depending on the machine type (32-bit or 64-bit), obtain the resource directory data.
         IMAGE_DATA_DIRECTORY resourceDirectory;
@@ -64,15 +76,15 @@ bool GetAll(BYTE* pBase, uint64_t fileSize, std::vector<ResourceInfo>& resources
             resourceDirectory = reinterpret_cast<IMAGE_NT_HEADERS64*>(pNtHeaders)->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE];
             break;
         default:
-            return false;
+            return std::nullopt;
         };
 
         // If the resource directory is empty, exit as there are no resources.
         if (resourceDirectory.Size == 0)
-            return false;
+            return std::nullopt;
 
         // Convert the RVA of the resources to a RAW offset
-        uint64_t resourceBase = tools::RvaToOffset(pBase, resourceDirectory.VirtualAddress);
+        uint64_t resourceBase = ntpe::RvaToOffset(pBase, resourceDirectory.VirtualAddress);
         IMAGE_RESOURCE_DIRECTORY* pResourceDir = reinterpret_cast<IMAGE_RESOURCE_DIRECTORY*>(pBase + resourceBase);
 
         //********************************************************
@@ -107,17 +119,17 @@ bool GetAll(BYTE* pBase, uint64_t fileSize, std::vector<ResourceInfo>& resources
                     entry.Size = pDataEntry->Size;
                     entry.Type = (PIMAGE_RESOURCE_DIR_STRING_U)(pTypeEntry->NameIsString) ? (PIMAGE_RESOURCE_DIR_STRING_U)(pBase + pTypeEntry->NameOffset + resourceBase) : (PIMAGE_RESOURCE_DIR_STRING_U)(pTypeEntry->Id);
                     entry.Name = (PIMAGE_RESOURCE_DIR_STRING_U)(pNameEntry->NameIsString) ? (PIMAGE_RESOURCE_DIR_STRING_U)(pBase + pNameEntry->NameOffset + resourceBase) : (PIMAGE_RESOURCE_DIR_STRING_U)(pNameEntry->Id);
-                    entry.data = tools::RvaToRaw(pBase, pDataEntry->OffsetToData);
+                    entry.data = ntpe::RvaToRaw(pBase, pDataEntry->OffsetToData);
                     resources.push_back(entry);
                 }
             }
         }
 
-        return true;
+        return resources;
     }
-    __except (EXCEPTION_EXECUTE_HANDLER)
+    catch (std::exception&)
     {
-        return false;
+        return std::nullopt;
     };
 }
 

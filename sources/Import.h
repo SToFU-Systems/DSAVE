@@ -26,6 +26,6 @@ namespace Import
 {
     typedef std::map<std::string, std::set<std::string>> IMPORT_LIST;
 
-    std::optional<IMPORT_LIST> getAll                 (PBYTE pBase, uint64_t fileSize);
+    std::optional<IMPORT_LIST> GetAll                 (PBYTE pBase, uint64_t fileSize);
     bool                       removeNonNativeModules (Import::IMPORT_LIST& importList);
 }

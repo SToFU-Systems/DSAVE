@@ -24,6 +24,9 @@
 #include <fstream>
 #include "Tools.h"
 
+#define ERROR_INVALID_ADDRESS (PBYTE)-1
+#define ERROR_INVALID_OFFSET  -1
+
 namespace ntpe
 {
     struct IMAGE_NTPE_CONTEXT
@@ -51,7 +54,8 @@ namespace ntpe
         std::vector<IMAGE_SECTION_HEADER> secHeaders;
     };
 
-    uint64_t                           rva2offset       (const ntpe::IMAGE_NTPE_CONTEXT& ntpeCtx, uint64_t rva);
+    uint64_t                           RvaToOffset      (PBYTE pBase, uint64_t rva);
+    PBYTE                              RvaToRaw         (PBYTE pBase, uint64_t rva);
     std::optional<IMAGE_NTPE_CONTEXT>  getNTPEContext   (PBYTE fileMapBase, uint64_t fileSize);
     std::optional<IMAGE_NTPE_DATA>     getNTPEData      (const IMAGE_NTPE_CONTEXT& ntCtx);
 }

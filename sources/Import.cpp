@@ -59,7 +59,7 @@ bool removeNonNativeModules(Import::IMPORT_LIST& importList)
 // std::nullopt in case of error.
 // 
 //**********************************************************************************
-std::optional<IMPORT_LIST> getAll(PBYTE pBase, uint64_t fileSize)
+std::optional<IMPORT_LIST> GetAll(PBYTE pBase, uint64_t fileSize)
 {
     ntpe::IMAGE_NTPE_CONTEXT ntpe = {};
     std::optional<ntpe::IMAGE_NTPE_CONTEXT> ntpeOptional = ntpe::getNTPEContext(pBase, fileSize);
@@ -76,7 +76,7 @@ std::optional<IMPORT_LIST> getAll(PBYTE pBase, uint64_t fileSize)
         IMPORT_LIST result;
 
         /* import table offset */
-        uint64_t impOffset = ntpe::rva2offset(ntpe, ntpe.dataDirectories[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
+        uint64_t impOffset = ntpe::RvaToOffset(ntpe.fileBase, ntpe.dataDirectories[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
 
         /* imoprt table descriptor from import table offset + file base adress */
         PIMAGE_IMPORT_DESCRIPTOR impTable = (PIMAGE_IMPORT_DESCRIPTOR)(impOffset + ntpe.fileBase);
@@ -85,11 +85,11 @@ std::optional<IMPORT_LIST> getAll(PBYTE pBase, uint64_t fileSize)
         while (impTable->Name != 0)
         {
             /* pointer to DLL name from offset of current section name + file base adress */
-            std::string modname = rva2offset(ntpe, impTable->Name) + (char*)ntpe.fileBase;
+            std::string modname = ntpe::RvaToOffset(ntpe.fileBase, impTable->Name) + (char*)ntpe.fileBase;
             std::transform(modname.begin(), modname.end(), modname.begin(), ::toupper);
 
             /* start adress of names in look up table from import table name RVA */
-            char* cell = (char*)ntpe.fileBase + ((impTable->OriginalFirstThunk) ? rva2offset(ntpe, impTable->OriginalFirstThunk) : rva2offset(ntpe, impTable->FirstThunk));
+            char* cell = (char*)ntpe.fileBase + ((impTable->OriginalFirstThunk) ? ntpe::RvaToOffset(ntpe.fileBase, impTable->OriginalFirstThunk) : ntpe::RvaToOffset(ntpe.fileBase, impTable->FirstThunk));
 
             /* while names in look up table */
             for (;; cell += ntpe.CellSize)
@@ -103,7 +103,7 @@ std::optional<IMPORT_LIST> getAll(PBYTE pBase, uint64_t fileSize)
 
                 /* if rva > 0 function was imported by name. if rva < 0 function was imported by ordinall */
                 if (rva > 0)
-                    result[modname].emplace((char*)ntpe.fileBase + ntpe::rva2offset(ntpe, rva) + 2);
+                    result[modname].emplace((char*)ntpe.fileBase + ntpe::RvaToOffset(ntpe.fileBase, rva) + 2);
                 else
                     result[modname].emplace(std::string("#ord: ") + std::to_string(rva & 0xFFFF));
             };

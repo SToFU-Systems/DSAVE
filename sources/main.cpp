@@ -86,11 +86,10 @@ GNU General Public License for more details.\r\n\r\n\r\n");
     tools::readFile(fileName2, file2);
 
     //  parse import
-    auto imp = Import::getAll(file1.data(), file1.size());
+    auto imp = Import::GetAll(file1.data(), file1.size());
 
     //  parse resources
-    std::vector<Resources::ResourceInfo> res;
-    Resources::GetAll(file1.data(), file1.size(), res);
+    auto res = Resources::GetAll(file1.data(), file1.size());
     
     //  hash calculator
     SetConsoleTitleA("DSAVE Hash calculator");

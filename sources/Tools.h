@@ -27,9 +27,6 @@ namespace tools
     typedef std::set<std::wstring> FILES_LIST;
 
     bool     readFile(std::wstring_view filePath, _Out_ std::vector<BYTE>& fileData);
-    uint64_t alignUp    (uint64_t value, uint64_t alignment);
-    PBYTE    RvaToRaw   (PBYTE pBase, uint64_t rva);
-    uint64_t RvaToOffset(PBYTE pBase, uint64_t rva);
     std::set<std::wstring> getFilesList(std::wstring_view directory, std::wstring_view matchSpec);
     std::wstring toUtf16(std::string_view utf8);
     std::wstring pathToFullLwr(std::wstring_view path);

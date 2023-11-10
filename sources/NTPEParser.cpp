@@ -23,43 +23,48 @@
 
 namespace ntpe
 {
-    static constexpr uint64_t g_kRvaError = -1;
-
-    //**********************************************************************************
-    // FUNCTION: rva2offset(IMAGE_NTPE_DATA& ntpe, DWORD rva)
-    // 
-    // ARGS:
-    // IMAGE_NTPE_DATA& ntpe - data from PE file.
-    // DWORD rva - relative virtual address.
-    // 
-    // DESCRIPTION: 
-    // Parse RVA (relative virtual address) to offset.
-    // 
-    // RETURN VALUE: 
-    // int64_t offset. 
-    // g_kRvaError (-1) in case of error.
-    // 
-    //**********************************************************************************
-    uint64_t rva2offset(const ntpe::IMAGE_NTPE_CONTEXT& ntpe, uint64_t rva)
+    uint64_t RvaToOffset(PBYTE pBase, uint64_t rva)
     {
-        /* retrieve first section */
-        try
+        __try
         {
-            /* walk on sections */
-            for (uint64_t secIndex = 0; secIndex < ntpe.ntHeader64->FileHeader.NumberOfSections; secIndex++)
-            {
-                PIMAGE_SECTION_HEADER sec = ntpe.sectionDirectories + secIndex;
-                DWORD secEnd = math::alignUp(sec->Misc.VirtualSize, ntpe.SecAlign) + sec->VirtualAddress;
-                if (sec->VirtualAddress <= rva && secEnd > rva)
-                    return rva - sec->VirtualAddress + sec->PointerToRawData;
-            };
-        }
-        catch (std::exception&)
-        {
-        }
+            IMAGE_DOS_HEADER* pDosHeader = reinterpret_cast<IMAGE_DOS_HEADER*>(pBase);
+            IMAGE_NT_HEADERS* pNtHeaders = reinterpret_cast<IMAGE_NT_HEADERS*>(pBase + pDosHeader->e_lfanew);
+            IMAGE_SECTION_HEADER* pSectionHeaders = IMAGE_FIRST_SECTION(pNtHeaders);
 
-        return g_kRvaError;
-    };
+            if (pNtHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_AMD64 &&
+                pNtHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_I386)
+                return ERROR_INVALID_OFFSET;
+
+            uint64_t sectionAlignment = pNtHeaders->FileHeader.Machine == IMAGE_FILE_MACHINE_I386 ?
+                reinterpret_cast<IMAGE_NT_HEADERS64*>(pNtHeaders)->OptionalHeader.SectionAlignment :
+                reinterpret_cast<IMAGE_NT_HEADERS32*>(pNtHeaders)->OptionalHeader.SectionAlignment;
+
+            for (UINT i = 0; i < pNtHeaders->FileHeader.NumberOfSections; ++i)
+            {
+                uint64_t sectionStartRVA = pSectionHeaders[i].VirtualAddress;
+                uint64_t sectionEndRVA = math::alignUp(sectionStartRVA + pSectionHeaders[i].Misc.VirtualSize, sectionAlignment);
+
+                if (rva >= sectionStartRVA && rva < sectionEndRVA)
+                {
+                    uint64_t sectionStartRAW = pSectionHeaders[i].PointerToRawData;
+                    return rva - sectionStartRVA + sectionStartRAW;
+                }
+            }
+        }
+        __except (EXCEPTION_EXECUTE_HANDLER)
+        {
+        }
+        return ERROR_INVALID_OFFSET;
+    }
+
+
+    PBYTE RvaToRaw(PBYTE pBase, uint64_t rva)
+    {
+        uint64_t offset = RvaToOffset(pBase, rva);
+        if (offset == ERROR_INVALID_OFFSET)
+            return (PBYTE)ERROR_INVALID_ADDRESS;
+        return pBase + offset;
+    }
 
 
     //**********************************************************************************
