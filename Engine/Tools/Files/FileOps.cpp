@@ -10,7 +10,7 @@ namespace Files
     * @return std::vector<uint8_t> Vector containing the file data.
     *         Returns an empty vector on failure.
     */
-    std::vector<uint8_t> readFullFile(const std::wstring& path)
+    std::vector<uint8_t> getFileData(const std::wstring& path)
     {
         std::vector<uint8_t> fileData;
 
@@ -52,9 +52,42 @@ namespace Files
         catch (...)
         {
             // Suppress all other exceptions
-         
             return std::vector<uint8_t>();
         }
         return fileData;
     }
+
+    /**
+    * @brief Retrieves the size of a file.
+    *
+    * @param path Wide string path to the file.
+    * @return uint64_t Size of the file in bytes.
+    *         Returns 0 on failure.
+    */
+    uint64_t getFileSize(const std::wstring& path)
+    {
+        std::error_code ec;
+        uint64_t size = 0;
+
+        try
+        {
+            // Construct filesystem path
+            std::filesystem::path filePath(path);
+
+            // Get file size
+            size = std::filesystem::file_size(filePath, ec);
+            if (ec) {
+                return -1;
+            }
+        }
+        catch (const std::filesystem::filesystem_error& e) {
+            return -1;
+        }
+        catch (...) {
+            return -1;
+        }
+
+        return size;
+    }
+
 }
