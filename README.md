@@ -1,8 +1,8 @@
 # 🚀 Exciting News: We’re Building an Open Antivirus SDK! 🌟
 
-We’re thrilled to announce that **our team is creating an open SDK** to power a revolutionary open antivirus platform! This platform will bring together cybersecurity experts from around the world to test ideas, share knowledge, and build the tools of tomorrow.
+We are happy to announce that **our team is creating an open SDK** to power a open antivirus platform! This platform will bring together cybersecurity experts from around the world to test ideas, share knowledge, and build the tools of tomorrow.
 
-We believe that collaboration and openness are the keys to making the digital world safer for everyone.
+We believe that collaboration and openness are the keys to making the digital world safer and more interesting for everyone.
 
 ---
 
