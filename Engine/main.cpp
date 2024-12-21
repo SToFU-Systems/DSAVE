@@ -22,28 +22,8 @@
 */
 
 #include "stdafx.h"
-#include "Tools/Containers/Graph.h"
-#include "Tools/Files/FileTypes.h"
-
-#include <windows.h>
 
 int main() 
 {
-    Graph<std::string> g1, g2;
-
-    // Add elements with variable-length byte sequences
-    g1[{0x01, 0x02}] = "Element1";
-    g1[{0x03, 0x04}] = "Element2";
-
-    auto e = g1.findRelevant({ 01, 02, 03 });
-
-    Files::initializeTypeTable();
-
-    uint8_t* p = (uint8_t*)GetModuleHandleW(0);
-    std::vector<uint8_t> m(p, p+100);
-
-
-    auto e1 = Files::getFileType(m);
-
     return 0;
 }

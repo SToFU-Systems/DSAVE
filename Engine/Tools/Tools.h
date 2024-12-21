@@ -1,4 +1,4 @@
-﻿/*
+/*
 * This Software is part of the SToFU Systems S.L. project and is licensed under the
 * SToFU Non-Commercial License Agreement (Based on AGPL).
 *
@@ -21,22 +21,30 @@
 * Commercial Licensing Contact: contacts@stofu.io
 */
 
-#ifndef __IMPORT_H
-#define __IMPORT_H
+#ifndef __TOOLS_H
+#define __TOOLS_H
 
-#include <map>
-#include <optional>
-#include <set>
-#include <string>
+//	Math
+#include "Math/MathTools.h"
 
-#include "NTPEParser.h"
+//	Containers
+#include "Containers/ThreadSafeVector.h"
+#include "Containers/Graph.h"
 
-namespace ntpe
-{
-    using ImportList = std::map<std::string, std::set<std::string>>;
+//	Files
+#include "Files/FileOps.h"
 
-    std::optional<ImportList> getImports (uint8_t* pBase, uint64_t fileSize);
-}
+//	PE
+#include "Parsers/PE/PEStructures.h"
+#include "Parsers/PE/NTPEParser.h"
+#include "Parsers/PE/Import.h"
+
+//	System
+#include "System/Process.h"
+#include "System/FSParser.h"
+
+
+
+
 
 #endif
-

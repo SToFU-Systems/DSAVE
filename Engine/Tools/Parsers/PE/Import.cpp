@@ -25,22 +25,8 @@
 #include <windows.h>
 #include "import.h"
 
-namespace Import
+namespace ntpe
 {
-bool removeNonNativeModules(Import::IMPORT_LIST& importList)
-{
-    std::vector<char> modPath(0x8000);
-
-    for (auto modIt = importList.begin(); modIt != importList.end(); )
-    {
-        if (!SearchPathA(nullptr, modIt->first.c_str(), 0, modPath.size(), modPath.data(), nullptr))
-            modIt = importList.erase(modIt);
-        else
-            modIt++;
-    }
-    return true;
-};
-
 
 //**********************************************************************************
 // FUNCTION: getImportList(IMAGE_NTPE_DATA& ntpe)
@@ -61,7 +47,7 @@ bool removeNonNativeModules(Import::IMPORT_LIST& importList)
 // std::nullopt in case of error.
 // 
 //**********************************************************************************
-std::optional<IMPORT_LIST> GetAll(uint8_t* pBase, uint64_t fileSize)
+std::optional<ImportList> getImports(uint8_t* pBase, uint64_t fileSize)
 {
     ntpe::IMAGE_NTPE_CONTEXT ntpe = {};
     std::optional<ntpe::IMAGE_NTPE_CONTEXT> ntpeOptional = ntpe::getNTPEContext(pBase, fileSize);
@@ -75,13 +61,13 @@ std::optional<IMPORT_LIST> GetAll(uint8_t* pBase, uint64_t fileSize)
         if (ntpe.dataDirectories[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress == 0)
             return std::nullopt;
 
-        IMPORT_LIST result;
+        ImportList result;
 
         /* import table offset */
         uint64_t impOffset = ntpe::RvaToOffset(ntpe.fileBase, ntpe.dataDirectories[IMAGE_DIRECTORY_ENTRY_IMPORT].VirtualAddress);
 
         /* imoprt table descriptor from import table offset + file base adress */
-        PIMAGE_IMPORT_DESCRIPTOR impTable = (PIMAGE_IMPORT_DESCRIPTOR)(impOffset + ntpe.fileBase);
+        ImageImportDescriptor* impTable = (ImageImportDescriptor*)(impOffset + ntpe.fileBase);
 
         /* while names in import table */
         while (impTable->Name != 0)

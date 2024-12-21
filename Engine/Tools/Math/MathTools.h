@@ -1,4 +1,4 @@
-﻿/*
+/*
 * This Software is part of the SToFU Systems S.L. project and is licensed under the
 * SToFU Non-Commercial License Agreement (Based on AGPL).
 *
@@ -21,22 +21,19 @@
 * Commercial Licensing Contact: contacts@stofu.io
 */
 
-#ifndef __IMPORT_H
-#define __IMPORT_H
+#ifndef __MATH_TOOLS_H
+#define __MATH_TOOLS_H
 
-#include <map>
-#include <optional>
-#include <set>
-#include <string>
+#include <stdint.h>
+#include <math.h>
+#include <algorithm>
 
-#include "NTPEParser.h"
-
-namespace ntpe
+namespace Math
 {
-    using ImportList = std::map<std::string, std::set<std::string>>;
-
-    std::optional<ImportList> getImports (uint8_t* pBase, uint64_t fileSize);
+	uint64_t alignUp		(uint64_t value, uint64_t aligner);
+	uint8_t* alignUpPtr		(uint8_t* value, uint64_t aligner);
+	uint64_t alignDown		(uint64_t value, uint64_t aligner);
+	uint8_t* alignDownPtr	(uint8_t* value, uint64_t aligner);
 }
 
-#endif
-
+#endif 

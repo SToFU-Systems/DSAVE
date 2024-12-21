@@ -26,12 +26,4 @@
 
 #include <stdint.h>
 
-using BYTE  = uint8_t;
-using WORD  = uint16_t;
-using DWORD = uint32_t;
-using LONG  = int32_t;
-using ULONGLONG = uint64_t;
-using PBYTE = BYTE*;
-using QWORD = uint64_t;
-
 #endif

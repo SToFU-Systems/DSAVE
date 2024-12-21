@@ -23,29 +23,30 @@
 
 #include "stdafx.h"
 #include "NTPEParser.h"
+#include "PEStructures.h"
 
 namespace ntpe
 {
     uint64_t RvaToOffset(uint8_t* pBase, uint64_t rva)
     {
-        __try
+        try
         {
-            IMAGE_DOS_HEADER* pDosHeader = reinterpret_cast<IMAGE_DOS_HEADER*>(pBase);
-            IMAGE_NT_HEADERS32* pNtHeaders = reinterpret_cast<IMAGE_NT_HEADERS32*>(pBase + pDosHeader->e_lfanew);
-            IMAGE_SECTION_HEADER* pSectionHeaders = IMAGE_FIRST_SECTION(pNtHeaders);
+            ImageDosHeader* pDosHeader = reinterpret_cast<ImageDosHeader*>(pBase);
+            ImageNtHeaders32* pNtHeaders = reinterpret_cast<ImageNtHeaders32*>(pBase + pDosHeader->e_lfanew);
+            ImageSectionHeader* pSectionHeaders = IMAGE_FIRST_SECTION(pNtHeaders);
 
             if (pNtHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_AMD64 &&
                 pNtHeaders->FileHeader.Machine != IMAGE_FILE_MACHINE_I386)
                 return ERROR_INVALID_OFFSET;
 
             uint64_t sectionAlignment = pNtHeaders->FileHeader.Machine == IMAGE_FILE_MACHINE_I386 ?
-                reinterpret_cast<IMAGE_NT_HEADERS64*>(pNtHeaders)->OptionalHeader.SectionAlignment :
-                reinterpret_cast<IMAGE_NT_HEADERS32*>(pNtHeaders)->OptionalHeader.SectionAlignment;
+                reinterpret_cast<ImageNtHeaders64*>(pNtHeaders)->OptionalHeader.SectionAlignment :
+                reinterpret_cast<ImageNtHeaders32*>(pNtHeaders)->OptionalHeader.SectionAlignment;
 
             for (uint32_t i = 0; i < pNtHeaders->FileHeader.NumberOfSections; ++i)
             {
                 uint64_t sectionStartRVA = pSectionHeaders[i].VirtualAddress;
-                uint64_t sectionEndRVA = math::alignUp(sectionStartRVA + pSectionHeaders[i].Misc.VirtualSize, sectionAlignment);
+                uint64_t sectionEndRVA = Math::alignUp(sectionStartRVA + pSectionHeaders[i].Misc.VirtualSize, sectionAlignment);
 
                 if (rva >= sectionStartRVA && rva < sectionEndRVA)
                 {
@@ -54,120 +55,106 @@ namespace ntpe
                 }
             }
         }
-        __except (EXCEPTION_EXECUTE_HANDLER)
+        catch (std::exception&)
         {
         }
         return ERROR_INVALID_OFFSET;
     }
 
 
-    PBYTE RvaToRaw(PBYTE pBase, uint64_t rva)
+    uint8_t* RvaToRaw(uint8_t* pBase, uint64_t rva)
     {
         uint64_t offset = RvaToOffset(pBase, rva);
         if (offset == ERROR_INVALID_OFFSET)
-            return (PBYTE)ERROR_INVALID_ADDRESS;
+            return (uint8_t*)ERROR_INVALID_ADDRESS;
         return pBase + offset;
     }
 
 
-    //**********************************************************************************
-    // FUNCTION: getNTPEData(char* fileMapBase)
-    // 
-    // ARGS:
-    // char* fileMapBase - the starting address of the mapped file.
-    // 
-    // DESCRIPTION: 
-    // Parses following data from mapped PE file.
-    //  
-    // Documentation links:
-    // PE format structure: https://learn.microsoft.com/en-us/windows/win32/debug/pe-format
-    //
-    // RETURN VALUE: 
-    // std::optional<IMAGE_NTPE_DATA>. 
-    // std::nullopt in case of error.
-    // 
-    //**********************************************************************************
-    #define initNTPE(HeaderType, cellSize) \
-    { \
-    PBYTE ntstdHeader       = (PBYTE)fileHeader + sizeof(IMAGE_FILE_HEADER); \
-    data.fileBase           = fileMapBase; \
-    data.fileSize           = fileSize; \
-    data.ntHeader64         = (PIMAGE_NT_HEADERS64)peSignature; \
-    HeaderType* optHeader   = (HeaderType*)ntstdHeader; \
-    data.sectionDirectories = (PIMAGE_SECTION_HEADER)(ntstdHeader + sizeof(HeaderType)); \
-    data.SecAlign           = optHeader->SectionAlignment; \
-    data.FileAlign          = optHeader->FileAlignment; \
-    data.dataDirectories    = optHeader->DataDirectory; \
-    data.CellSize           = cellSize;	\
-    }
-    std::optional<IMAGE_NTPE_CONTEXT> getNTPEContext(PBYTE fileMapBase, uint64_t fileSize)
+    /**
+    * @brief Retrieves the NTPE context from a mapped PE file.
+    *
+    * @param fileMapBase Pointer to the base of the mapped file.
+    * @param fileSize    Size of the mapped file.
+    * @return std::optional<IMAGE_NTPE_CONTEXT> Returns the context if successful, std::nullopt otherwise.
+    */
+    std::optional<IMAGE_NTPE_CONTEXT> getNTPEContext(uint8_t* fileMapBase, uint64_t fileSize)
     {
-        try
+        try 
         {
-            /* PIMAGE_DOS_HEADER from starting address of the mapped view*/
-            PIMAGE_DOS_HEADER dosHeader = (IMAGE_DOS_HEADER*)fileMapBase;
+            // Validate input pointers and file size
+            if (!fileMapBase || fileSize < sizeof(ImageDosHeader*))
+                return std::nullopt;
 
-            /* return std::nullopt in case of no IMAGE_DOS_SIGNATUR signature */
+            // Initialize DOS header
+            ImageDosHeader* dosHeader = reinterpret_cast<ImageDosHeader*>(fileMapBase);
             if (dosHeader->e_magic != IMAGE_DOS_SIGNATURE)
                 return std::nullopt;
 
-            /* PE signature adress from base address + offset of the PE header relative to the beginning of the file */
-            PDWORD peSignature = (PDWORD)(fileMapBase + dosHeader->e_lfanew);
-            if ((PBYTE)peSignature <= fileMapBase || (PBYTE)peSignature - fileMapBase >= fileSize)
+            // Ensure e_lfanew is within file bounds
+            if (dosHeader->e_lfanew + sizeof(uint32_t) > fileSize)
                 return std::nullopt;
 
-            /* return std::nullopt in case of no PE signature */
-            if (*peSignature != IMAGE_NT_SIGNATURE)
+            // Initialize NT headers signature
+            uint32_t signature = *reinterpret_cast<uint32_t*>(fileMapBase + dosHeader->e_lfanew);
+            if (signature != IMAGE_NT_SIGNATURE)
                 return std::nullopt;
 
-            /* file header address from PE signature address */
-            PIMAGE_FILE_HEADER fileHeader = (PIMAGE_FILE_HEADER)(peSignature + 1);
-            if (fileHeader->Machine != IMAGE_FILE_MACHINE_I386 &&
-                fileHeader->Machine != IMAGE_FILE_MACHINE_AMD64)
-                return std::nullopt;
+            // Determine if PE is 32-bit or 64-bit
+            ImageNtHeaders32* ntHeader32 = reinterpret_cast<ImageNtHeaders32*>(fileMapBase + dosHeader->e_lfanew);
+            ImageNtHeaders64* ntHeader64 = nullptr;
+            bool is64Bit = false;
 
-            /* result IMAGE_NTPE_DATA structure with info from PE file */
-            IMAGE_NTPE_CONTEXT data = {};
-
-            /* addresses of PIMAGE_SECTION_HEADER, PIMAGE_DATA_DIRECTORIES, SectionAlignment, CellSize depending on processor architecture */
-            switch (fileHeader->Machine)
+            if (ntHeader32->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC)
             {
-            case IMAGE_FILE_MACHINE_I386:
-                initNTPE(IMAGE_OPTIONAL_HEADER32, 4);
-                break;
-
-            case IMAGE_FILE_MACHINE_AMD64:
-                initNTPE(IMAGE_OPTIONAL_HEADER64, 8);
-                break;
-
-            default:
+                is64Bit = true;
+                ntHeader64 = reinterpret_cast<ImageNtHeaders64*>(ntHeader32);
+            }
+            else if (ntHeader32->OptionalHeader.Magic != IMAGE_NT_OPTIONAL_HDR32_MAGIC)
+            {
                 return std::nullopt;
             }
 
-            return data;
-        }
-        catch (std::exception&)
-        {
-        }
-        return std::nullopt;
-    }
+            // Populate IMAGE_NTPE_CONTEXT
+            IMAGE_NTPE_CONTEXT context{};
+            context.fileBase       = fileMapBase;
+            context.fileSize       = fileSize;
+            context.dosHeader      = dosHeader;
+            context.fileHeader     = &ntHeader32->FileHeader;
+            context.SecAlign       = ntHeader32->OptionalHeader.SectionAlignment;
+            context.FileAlign      = ntHeader32->OptionalHeader.FileAlignment;
+            context.CellSize       = (is64Bit)?8:4; // Set appropriately if used
 
-    std::optional<IMAGE_NTPE_DATA> getNTPEData(const ntpe::IMAGE_NTPE_CONTEXT& ntCtx)
-    {
-        try
-        {
-            ntpe::IMAGE_NTPE_DATA data;
-            data.dosHeader  = *(PIMAGE_DOS_HEADER)(ntCtx.fileBase);
-            data.ntHeader64 = *ntCtx.ntHeader64;
-            for (uint64_t secIndex = 0; secIndex < ntCtx.ntHeader64->FileHeader.NumberOfSections; secIndex++)
-                data.secHeaders.push_back(*(ntCtx.sectionDirectories + secIndex));
-        }
-        catch (std::exception&)
-        {
-        }
-        return std::nullopt;
-    }
+            if (is64Bit)
+            {
+                context.ntHeader64       = ntHeader64;
+                context.dataDirectories  = ntHeader64->OptionalHeader.DataDirectory;
+            }
+            else
+            {
+                context.ntHeader32       = ntHeader32;
+                context.dataDirectories  = ntHeader32->OptionalHeader.DataDirectory;
+            }
 
+            // Calculate section headers position
+            uint32_t numberOfSections = context.fileHeader->NumberOfSections;
+            size_t sectionHeaderOffset = dosHeader->e_lfanew +
+                                            sizeof(uint32_t) +
+                                            sizeof(ImageFileHeader*) +
+                                            ntHeader32->FileHeader.SizeOfOptionalHeader;
+
+            if (sectionHeaderOffset + numberOfSections * sizeof(ImageSectionHeader*) > fileSize)
+                return std::nullopt;
+
+            context.sectionDirectories = reinterpret_cast<ImageSectionHeader*>(fileMapBase + sectionHeaderOffset);
+
+            return context;
+        }
+        catch (...)
+        {
+            return std::nullopt;
+        }
+    }
 
 }
 

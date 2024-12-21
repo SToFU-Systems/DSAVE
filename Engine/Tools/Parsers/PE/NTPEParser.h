@@ -25,41 +25,37 @@
 #define __NTPEPARSER_H
 
 #include <fstream>
+#include "Tools/Math/MathTools.h"
 #include "PEStructures.h"
 
-#define ERROR_INVALID_ADDRESS (PBYTE)-1
+#define ERROR_INVALID_ADDRESS (uint8_t*)-1
 #define ERROR_INVALID_OFFSET  -1
 
 namespace ntpe
 {
     struct IMAGE_NTPE_CONTEXT
     {
-        PBYTE                       fileBase;
-        size_t                      fileSize;
+        uint8_t*                       fileBase;
+        uint32_t                       fileSize;
+        uint32_t                       SecAlign;
+        uint32_t                       FileAlign;
+        uint32_t                       CellSize;			//	size of cell of LookupTable/AddressTable
+
+        //  pointers
+        ImageDosHeader*           dosHeader; 
+        ImageFileHeader*          fileHeader;
+
         union {
-            PIMAGE_NT_HEADERS32     ntHeader32;
-            PIMAGE_NT_HEADERS64     ntHeader64;
+            ImageNtHeaders32* ntHeader32;
+            ImageNtHeaders64* ntHeader64;
         };
-        PIMAGE_DATA_DIRECTORY       dataDirectories;
-        PIMAGE_SECTION_HEADER       sectionDirectories;
-        DWORD                       SecAlign;
-        DWORD                       FileAlign;
-        WORD                        CellSize;			//	size of cell of LookupTable/AddressTable
+        ImageDataDirectory*       dataDirectories;
+        ImageSectionHeader*       sectionDirectories;
     };
 
-    struct IMAGE_NTPE_DATA
-    {
-        IMAGE_DOS_HEADER dosHeader;
-        union {
-            IMAGE_NT_HEADERS32 ntHeader32;
-            IMAGE_NT_HEADERS64 ntHeader64;
-        };
-        std::vector<IMAGE_SECTION_HEADER> secHeaders;
-    };
-    uint64_t                           RvaToOffset      (PBYTE pBase, uint64_t rva);
-    PBYTE                              RvaToRaw         (PBYTE pBase, uint64_t rva);
-    std::optional<IMAGE_NTPE_CONTEXT>  getNTPEContext   (PBYTE fileMapBase, uint64_t fileSize);
-    std::optional<IMAGE_NTPE_DATA>     getNTPEData      (const IMAGE_NTPE_CONTEXT& ntCtx);
+    uint64_t                           RvaToOffset      (uint8_t* pBase, uint64_t rva);
+    uint8_t*                           RvaToRaw         (uint8_t* pBase, uint64_t rva);
+    std::optional<IMAGE_NTPE_CONTEXT>  getNTPEContext   (uint8_t* fileMapBase, uint64_t fileSize);
 }
 
 #endif
